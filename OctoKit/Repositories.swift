@@ -125,25 +125,66 @@ public extension Octokit {
         return try await router.load(session, dateDecodingStrategy: .formatted(Time.rfc3339DateFormatter), expectedResultType: Repository.self)
     }
     #endif
+    
+    @discardableResult
+    func createRepository(name: String,
+                          description: String? = nil,
+                          session: RequestKitURLSession = URLSession.shared,
+                          completion: @escaping (_ response: Result<Repository, Error>) -> Void) -> URLSessionDataTaskProtocol? {
+        let router = RepositoryRouter.writeRepository(configuration, name: name, description: description)
+        return router.post(session,
+                           decoder: JSONDecoder(),
+                           expectedResultType: Repository.self) { repo, error in
+            if let error = error {
+                completion(.failure(error))
+            } else {
+                if let repo = repo {
+                    completion(.success(repo))
+                }
+            }
+        }
+    }
+    
+    #if compiler(>=5.5.2) && canImport(_Concurrency)
+    @available(macOS 12.0, iOS 15.0, tvOS 15.0, watchOS 8.0, *)
+    func createRepository(name: String,
+                          description: String? = nil,
+                          session: RequestKitURLSession = URLSession.shared) async throws -> Repository {
+        let router = RepositoryRouter.writeRepository(configuration, name: name, description: description)
+        return try await router.post(session,
+                                     decoder: JSONDecoder(),
+                                     expectedResultType: Repository.self)
+    }
+    #endif
 }
 
 // MARK: Router
 
-enum RepositoryRouter: Router {
+enum RepositoryRouter: JSONPostRouter {
     case readRepositories(Configuration, String, String, String)
     case readAuthenticatedRepositories(Configuration, String, String)
     case readRepository(Configuration, String, String)
+    case writeRepository(Configuration, name: String, description: String?)
 
     var configuration: Configuration {
         switch self {
         case let .readRepositories(config, _, _, _): return config
         case let .readAuthenticatedRepositories(config, _, _): return config
         case let .readRepository(config, _, _): return config
+        case let .writeRepository(config, _, _): return config
         }
     }
 
     var method: HTTPMethod {
         return .GET
+        switch self {
+        case .readRepositories,
+                .readAuthenticatedRepositories,
+                .readRepository:
+            return .GET
+        case .writeRepository:
+            return .POST
+        }
     }
 
     var encoding: HTTPEncoding {
@@ -158,6 +199,16 @@ enum RepositoryRouter: Router {
             return ["per_page": perPage, "page": page]
         case .readRepository:
             return [:]
+            
+        case let .writeRepository(_, name, description):
+            var params = [String: Any]()
+            params["name"] = name
+            params["private"] = true
+            if let description {
+                params["description"] = description
+            }
+            
+            return params
         }
     }
 
@@ -165,7 +216,7 @@ enum RepositoryRouter: Router {
         switch self {
         case let .readRepositories(_, owner, _, _):
             return "users/\(owner)/repos"
-        case .readAuthenticatedRepositories:
+        case .readAuthenticatedRepositories, .writeRepository:
             return "user/repos"
         case let .readRepository(_, owner, name):
             return "repos/\(owner)/\(name)"
