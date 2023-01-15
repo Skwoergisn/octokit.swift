@@ -132,8 +132,10 @@ public extension Octokit {
                           session: RequestKitURLSession = URLSession.shared,
                           completion: @escaping (_ response: Result<Repository, Error>) -> Void) -> URLSessionDataTaskProtocol? {
         let router = RepositoryRouter.writeRepository(configuration, name: name, description: description)
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .formatted(Time.rfc3339DateFormatter)
         return router.post(session,
-                           decoder: JSONDecoder(),
+                           decoder: decoder,
                            expectedResultType: Repository.self) { repo, error in
             if let error = error {
                 completion(.failure(error))
@@ -151,8 +153,10 @@ public extension Octokit {
                           description: String? = nil,
                           session: RequestKitURLSession = URLSession.shared) async throws -> Repository {
         let router = RepositoryRouter.writeRepository(configuration, name: name, description: description)
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .formatted(Time.rfc3339DateFormatter)
         return try await router.post(session,
-                                     decoder: JSONDecoder(),
+                                     decoder: decoder,
                                      expectedResultType: Repository.self)
     }
     #endif
