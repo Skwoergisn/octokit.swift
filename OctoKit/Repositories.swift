@@ -176,7 +176,6 @@ enum RepositoryRouter: JSONPostRouter {
     }
 
     var method: HTTPMethod {
-        return .GET
         switch self {
         case .readRepositories,
                 .readAuthenticatedRepositories,
