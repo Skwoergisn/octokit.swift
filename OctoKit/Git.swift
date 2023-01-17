@@ -453,20 +453,20 @@ enum GITRouter: JSONPostRouter {
             return "repos/\(owner)/\(repo)/git/refs/\(reference)"
             
         case let .rootTree(_, repo):
-            return "repos/\(repo.owner.name!)/\(repo.name!)/git/trees/main"
+            return "repos/\(repo.owner.login!)/\(repo.name!)/git/trees/main"
             
         case let .createBlob(_, repo, _):
-            return "/repos/\(repo.owner.name!)/\(repo.name!)/git/blobs"
+            return "/repos/\(repo.owner.login!)/\(repo.name!)/git/blobs"
             
         case let .createTree(_, repo, _):
-            return "/repos/\(repo.owner.name!)/\(repo.name!)/git/trees"
+            return "/repos/\(repo.owner.login!)/\(repo.name!)/git/trees"
             
         case let .createCommit(_, repo, _):
-            return "/repos/\(repo.owner.name!)/\(repo.name!)/git/commits"
+            return "/repos/\(repo.owner.login!)/\(repo.name!)/git/commits"
             
         case let .updateRef(_, repo, _),
             let .parentCommit(_, repo):
-            return "/repos/\(repo.owner.name!)/\(repo.name!)/git/refs/heads/main"
+            return "/repos/\(repo.owner.login!)/\(repo.name!)/git/refs/heads/main"
         }
     }
 }
