@@ -207,6 +207,7 @@ enum RepositoryRouter: JSONPostRouter {
             var params = [String: Any]()
             params["name"] = name
             params["private"] = true
+            params["auto_init"] = true
             if let description {
                 params["description"] = description
             }
