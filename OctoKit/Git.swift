@@ -103,7 +103,7 @@ public extension Octokit {
                                                         message: message,
                                                         parents: [parentCommit.object.sha]))
         let decoder = JSONDecoder()
-        decoder.dateDecodingStrategy = .formatted(Time.rfc3339DateFormatter))
+        decoder.dateDecodingStrategy = .formatted(Time.rfc3339DateFormatter)
         return try await router.post(URLSession.shared, decoder: decoder, expectedResultType: GitResponses.Commit.self)
     }
     
