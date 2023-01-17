@@ -38,7 +38,7 @@ public extension Octokit {
     
     #if compiler(>=5.5.2) && canImport(_Concurrency)
     @available(macOS 12.0, iOS 15.0, tvOS 15.0, watchOS 8.0, *)
-    func commit(files: [any Blob], to repository: Repository, message: String) async throws {
+    func commit(files: [Blob], to repository: Repository, message: String) async throws {
         
         // Get root tree
         let rootTree = try await rootTree(of: repository)
@@ -307,9 +307,19 @@ public extension Octokit {
     }
 }
 
-public protocol Blob {
-    var fileName: String { get }
-    var content: Octokit.BlobType { get }
+public struct Blob {
+    var fileName: String
+    var content: Octokit.BlobType
+    
+    public init(fileName: String, content: Octokit.BlobType) {
+        self.fileName = fileName
+        self.content = content
+    }
+    
+    public init(fileName: String, content: String) {
+        self.fileName = fileName
+        self.content = .string(content)
+    }
 }
 
 @available(macOS 12.0, iOS 15.0, tvOS 15.0, watchOS 8.0, *)
