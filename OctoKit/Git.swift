@@ -102,7 +102,9 @@ public extension Octokit {
                                             body: .init(treeSHA: tree.sha,
                                                         message: message,
                                                         parents: [parentCommit.object.sha]))
-        return try await router.post(URLSession.shared, expectedResultType: GitResponses.Commit.self)
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .formatted(Time.rfc3339DateFormatter))
+        return try await router.post(URLSession.shared, decoder: decoder, expectedResultType: GitResponses.Commit.self)
     }
     
     @available(macOS 12.0, iOS 15.0, tvOS 15.0, watchOS 8.0, *)
