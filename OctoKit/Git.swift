@@ -67,7 +67,7 @@ public extension Octokit {
     
     @available(macOS 12.0, iOS 15.0, tvOS 15.0, watchOS 8.0, *)
     func createBlob(_ blob: Blob, in repo: Repository) async throws -> GitResponses.Blob {
-        let router = GITRouter.createBlob(configuration, repo: repo, body: .init(content: try blob.content.base64EncodedString(), encoding: blob.content.encoding))
+        let router = GITRouter.createBlob(configuration, repo: repo, body: .init(content: blob.content.base64EncodedString(), encoding: blob.content.encoding))
         return try await router.post(URLSession.shared, expectedResultType: GitResponses.Blob.self)
     }
     
@@ -358,15 +358,12 @@ public extension Octokit {
         case data(Data)
         case string(String)
         
-        func base64EncodedString() throws -> String {
+        func base64EncodedString() -> String {
             switch self {
             case let .data(data):
                 return data.base64EncodedString()
             case let .string(string):
-                guard let data = string.data(using: .utf8) else {
-                    throw Error.invalidString
-                }
-                return data.base64EncodedString()
+                return string
             }
         }
         
@@ -375,10 +372,6 @@ public extension Octokit {
             case .data: return "base64"
             case .string: return "utf_8"
             }
-        }
-        
-        enum Error: Swift.Error {
-            case invalidString
         }
     }
 }
