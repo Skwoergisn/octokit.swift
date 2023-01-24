@@ -14,6 +14,8 @@ public struct TokenConfiguration: Configuration {
     public var accessToken: String?
     public let errorDomain = OctoKitErrorDomain
     public private(set) var authorizationHeader: String? = "Basic"
+    
+    public var accept: String?
 
     /// Custom `Accept` header for API previews.
     ///
@@ -22,8 +24,12 @@ public struct TokenConfiguration: Configuration {
     private var previewCustomHeaders: [HTTPHeader]?
 
     public var customHeaders: [HTTPHeader]? {
-        // More (non-preview) headers can be appended if needed in the future
-        return previewCustomHeaders
+        var headers: [HTTPHeader] = []
+        accept.map {
+            headers.append(.init(headerField: "Accept", value: $0))
+        }
+        headers.append(contentsOf: previewCustomHeaders ?? [])
+        return headers
     }
 
     public init(_ token: String? = nil, url: String = githubBaseURL, previewHeaders: [PreviewHeader] = []) {

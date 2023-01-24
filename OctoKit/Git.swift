@@ -114,6 +114,14 @@ public extension Octokit {
                                          body: .init(sha: commit.sha))
         return try await router.post(URLSession.shared, expectedResultType: GitResponses.Reference.self)
     }
+    
+    @available(macOS 12.0, iOS 15.0, tvOS 15.0, watchOS 8.0, *)
+    func fileContents(in repo: Repository, path: String) async throws -> Data {
+        var newConfig = configuration
+        newConfig.accept = "application/vnd.github.raw"
+        let router = GITRouter.fileContents(newConfig, repo: repo, filePath: path)
+        return try await router.load(expectedResultType: Data.self)
+    }
     #endif
 }
 
@@ -381,6 +389,7 @@ public extension Octokit {
 enum GITRouter: JSONPostRouter {
     case deleteReference(Configuration, String, String, String)
     
+    case fileContents(Configuration, repo: Repository, filePath: String)
     case rootTree(Configuration, repo: Repository)
     case createBlob(Configuration, repo: Repository, body: Octokit.GitRequestBodies.Blob)
     case createTree(Configuration, repo: Repository, body: Octokit.GitRequestBodies.Tree)
@@ -391,6 +400,7 @@ enum GITRouter: JSONPostRouter {
     var configuration: Configuration {
         switch self {
         case let .deleteReference(config, _, _, _),
+            let .fileContents(config, _, _),
             let .rootTree(config, _),
             let .createBlob(config, _, _),
             let .createTree(config, _, _),
@@ -407,7 +417,8 @@ enum GITRouter: JSONPostRouter {
             return .DELETE
             
         case .rootTree,
-                .parentCommit:
+                .parentCommit,
+                .fileContents:
             return .GET
             
         case .createTree,
@@ -432,7 +443,7 @@ enum GITRouter: JSONPostRouter {
 
     var params: [String: Any] {
         switch self {
-        case .deleteReference, .rootTree, .parentCommit:
+        case .deleteReference, .rootTree, .parentCommit, .fileContents:
             return [:]
             
         case let .createBlob(_, _, body): return body.parameters
@@ -446,6 +457,9 @@ enum GITRouter: JSONPostRouter {
         switch self {
         case let .deleteReference(_, owner, repo, reference):
             return "repos/\(owner)/\(repo)/git/refs/\(reference)"
+            
+        case let .fileContents(_, repo, filePath):
+            return "repos/\(repo.owner.login!)/\(repo.name!)/contents/\(filePath)"
             
         case let .rootTree(_, repo):
             return "repos/\(repo.owner.login!)/\(repo.name!)/git/trees/main"
